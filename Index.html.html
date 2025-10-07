@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastTyper.com</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Cambria", serif;font-weight:bold;color:#eee;height:100vh;overflow:hidden;
+background:linear-gradient(135deg,#001f3f,#004d40,#001f3f);background-size:400% 400%;
+animation:gradientMove 12s ease infinite;position:relative;}
+@keyframes gradientMove{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+header, footer{background: rgba(0,0,0,0.4); display:flex; justify-content:space-between; align-items:center;
+padding:15px 30px; font-size:22px; font-weight:bold;}
+
+main{display:flex; height:calc(100vh - 120px);}
+
+aside.left, aside.right{width:25%; padding:20px; background:rgba(0,0,0,0.35); display:flex; flex-direction:column;
+align-items:center; overflow-y:auto;}
+aside.left{border-right:1px solid rgba(255,255,0,0.2);}
+aside.right{border-left:1px solid rgba(255,255,0,0.2);}
+
+section.center{flex:1; display:flex; align-items:center; justify-content:center; position:relative;}
+
+#typingBox{width:95%; height:85%; background:rgba(0,0,0,0.6); border:2px solid rgba(255,255,0,0.3);
+border-radius:20px; padding:30px; text-align:center; display:flex; flex-direction:column; justify-content:center;
+font-family:"Cambria", serif; font-weight:bold; position:relative; z-index:2;}
+
+#targetText{background:rgba(0,0,0,0.3); border-radius:10px; padding:25px; font-size:24px; line-height:1.6;
+min-height:180px; margin-bottom:15px; text-align:left; overflow-y:auto;}
+
+textarea{width:100%; height:150px; background:rgba(0,0,0,0.8); color:#eee; border:none; outline:none;
+border-radius:10px; padding:20px; font-size:22px; resize:none;}
+
+button{background: linear-gradient(90deg,#ffeb3b,#fff176); color:#000; font-weight:bold; border:none;
+border-radius:8px; padding:12px 20px; margin:6px; cursor:pointer; font-size:18px;}
+button:hover{transform:scale(1.05);}
+button.active{background:#fff200;}
+.bigBtn{width:80%; font-size:22px; margin:10px 0;}
+
+#stats{font-size:22px; margin-bottom:15px;}
+#leaderboard{display:none; flex-direction:column; align-items:center; text-align:left;}
+.score{background: rgba(0,0,0,0.4); padding:10px 15px; margin:5px; border-radius:8px; width:80%;
+display:flex; justify-content:space-between; font-size:18px;}
+
+.difficulty-buttons{display:flex; flex-direction:column; align-items:center; width:100%;}
+.difficulty-buttons button{margin-bottom:10px; width:80%;}
+.timer-section{margin-top:auto; display:flex; flex-direction:column; align-items:center; width:100%;}
+.timer-section button{margin-bottom:10px; width:80%;}
+.advanced-section{margin-top:auto; text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>FastTyper.com</div>
+  <div>💪 Advanced Typing Challenge</div>
+</header>
+
+<main>
+<aside class="left">
+<h3 style="font-size:26px; margin-bottom:15px;">Lessons</h3>
+<div id="lessons"></div>
+
+<div class="advanced-section">
+  <p style="font-size:20px;">Advanced Mode:</p>
+  <button id="advancedMode" class="bigBtn">Unlimited Timer</button>
+</div>
+</aside>
+
+<section class="center">
+<div id="typingBox">
+<div id="stats">WPM: 0 | Accuracy: 0% | Time: 00:00</div>
+<div id="targetText"></div>
+<textarea id="inputArea" placeholder="Start typing here..."></textarea>
+<br>
+<button id="saveScore" style="display:none;">💾 Save Score</button>
+<button id="resetTest">🔁 Reset</button>
+<button id="viewLeaderboard">🏁 Leaderboard</button>
+</div>
+
+<div id="leaderboard">
+<h3 style="font-size:26px;">Leaderboard</h3>
+<div id="scores"></div>
+<button id="backToTest">⬅ Back</button>
+</div>
+</section>
+
+<aside class="right">
+<h3 style="font-size:26px; margin-bottom:15px;">Modes</h3>
+<div class="difficulty-buttons">
+<button class="diff active" data-diff="easy">Easy</button>
+<button class="diff" data-diff="medium">Medium</button>
+<button class="diff" data-diff="hard">Hard</button>
+</div>
+<div class="timer-section">
+<p style="font-size:20px;">Timer:</p>
+<button class="time active" data-time="15">15 sec</button>
+<button class="time" data-time="30">30 sec</button>
+<button class="time" data-time="60">60 sec</button>
+</div>
+<br><br>
+<div>
+<p style="font-size:20px;">Created by</p>
+<strong style="font-size:22px; color:#fff200;">Tushar Adhikari</strong>
+</div>
+</aside>
+</main>
+
+<footer>
+<div>Time Limit: <span id="footerTime">15s</span></div>
+<div>Designed by Tushar Adhikari</div>
+</footer>
+
+<script>
+// Easy/Medium/Hard lessons
+const lessons=["Typing builds speed and precision with practice.","Practice daily to improve your typing rhythm and accuracy.","Focus on accuracy first, speed will follow naturally.","A calm mind types steady words even under pressure.","Short bursts of practice beat long tired sessions.","Learn common patterns — your fingers will remember them."];
+
+// Advanced mode lessons (6 full stories)
+const advancedLessons=[
+`Story 1: In the quiet town of Asteria, children played freely while the sun painted golden hues across the rooftops. Among them, a young coder named Tushar spent hours on the keyboard, learning the rhythm of words and sentences. Every day, he challenged himself with longer texts, discovering the joy of speed and accuracy. By evening, the town would see a trail of glowing letters in his room as he practiced tirelessly, mastering each paragraph with patience and care.`,
+`Story 2: The night was calm, stars twinkling above as Tushar opened his notebook filled with typing exercises. He imagined grand adventures where words formed bridges and sentences became roads. With each keypress, he built worlds of creativity, racing against imaginary clocks. His fingers danced across the keyboard, green letters lighting the dark screen, marking progress in every carefully typed sentence.`,
+`Story 3: Deep in the city library, shelves towered with knowledge. Tushar sat at a quiet desk, practicing typing from old manuscripts. Each story he typed revealed secrets of long-forgotten lands, the rhythm of each line sharpening his focus. Hours passed, yet he remained engrossed, typing with a steady pace, learning that speed alone was not enough without accuracy and comprehension.`,
+`Story 4: On a rainy afternoon, Tushar watched droplets race down the windowpane while his fingers raced across the keys. Each paragraph he typed was a puzzle, a challenge to maintain accuracy under the gentle patter of rain. As he completed each story, he felt a surge of accomplishment, realizing that persistence and rhythm turned challenges into mastery.`,
+`Story 5: Summer breezes filled the open room as Tushar sat under a tree with his laptop. Birds chirped in harmony with his typing pace. Every story, longer than the last, demanded focus and patience. He typed of heroes, distant lands, and adventures unknown, each word reinforcing his discipline, speed, and love for the written narrative.`,
+`Story 6: The final story was a culmination of all lessons learned. Tushar embarked on a grand tale spanning kingdoms and seas, where each sentence was a bridge to new experiences. He typed with unwavering concentration, letters turning green as accuracy soared. Completing the story, he paused to admire the fruits of his practice: a harmony of speed, precision, and dedication.`
+];
+
+const wordPool="the quick brown fox jumps over the lazy dog keyboard typing speed accuracy practice rhythm master focus repeat training creative modern dark page".split(" ");
+const diffWordCount={ easy:10, medium:15, hard:20, advanced:50 };
+
+let selectedLesson=0, difficulty="easy", timeLimit=15;
+let timer, startTime, finished=false, started=false;
+
+const lessonContainer=document.getElementById("lessons");
+const inputArea=document.getElementById("inputArea");
+const targetText=document.getElementById("targetText");
+const stats=document.getElementById("stats");
+const footerTime=document.getElementById("footerTime");
+const leaderboard=document.getElementById("leaderboard");
+const typingBox=document.getElementById("typingBox");
+const scoresDiv=document.getElementById("scores");
+
+// Populate lessons buttons
+lessons.forEach((l,i)=>{
+  const b=document.createElement("button");
+  b.textContent="Lesson "+(i+1);
+  b.className="bigBtn";
+  b.onclick=()=>{selectedLesson=i; resetTest();}
+  lessonContainer.appendChild(b);
+});
+
+// Build text
+function buildText(){
+  if(difficulty==="advanced") return advancedLessons[selectedLesson];
+  const base=lessons[selectedLesson].split(" ");
+  let need = diffWordCount[difficulty] || 10;
+  let words=[...base];
+  while(words.length<need) words.push(wordPool[Math.floor(Math.random()*wordPool.length)]);
+  return words.slice(0,need).join(" ");
+}
+
+let text=buildText();
+targetText.innerHTML=colorizeText(text,"");
+
+// Difficulty buttons
+document.querySelectorAll(".diff").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".diff").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    difficulty=btn.dataset.diff;
+    resetTest();
+  };
+});
+
+// Timer buttons
+document.querySelectorAll(".time").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".time").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    timeLimit=parseInt(btn.dataset.time);
+    footerTime.textContent=timeLimit+"s";
+    resetTest();
+  };
+});
+
+// Advanced mode button
+document.getElementById("advancedMode").onclick = () => {
+  difficulty = "advanced";
+  document.querySelectorAll(".time").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".diff").forEach(b => b.classList.remove("active"));
+  resetTest();
+};
+
+// Typing input
+inputArea.addEventListener("input", ()=>{
+  if(!started && inputArea.value.length>0) startTyping();
+  updateColoredText();
+  if(inputArea.value.length >= text.length) finishTest();
+});
+
+// Start typing
+function startTyping(){
+  if(started) return;
+  started=true;
+  startTime=Date.now();
+
+  if(difficulty !== "advanced"){
+    timer=setInterval(()=>{
+      const elapsed=(Date.now()-startTime)/1000;
+      if(finished) return;
+      if(elapsed >= timeLimit) finishTest();
+      updateStats(elapsed);
+    },100);
+  }
+}
+
+// Stats
+function updateStats(elapsed){
+  const minutes=elapsed/60;
+  const words=inputArea.value.trim().split(/\s+/).length;
+  const wpm=Math.round(words/minutes||0);
+  const correct=countCorrectChars(text,inputArea.value);
+  const accuracy=Math.round((correct/text.length)*100);
+
+  if(difficulty==="advanced"){
+    stats.textContent=`WPM: ${wpm} | Accuracy: ${accuracy}% | Time Taken: ${formatTime(elapsed)}`;
+  } else {
+    stats.textContent=`WPM: ${wpm} | Accuracy: ${accuracy}% | Time: ${formatTime(elapsed)}`;
+  }
+}
+
+function countCorrectChars(t,i){let c=0; for(let j=0;j<Math.min(t.length,i.length);j++) if(t[j]===i[j]) c++; return c;}
+function formatTime(s){const m=Math.floor(s/60).toString().padStart(2,'0'); const ss=Math.floor(s%60).toString().padStart(2,'0'); return `${m}:${ss}`;}
+function colorizeText(full,input){let colored=""; for(let i=0;i<full.length;i++){ if(i<input.length){ if(full[i]===input[i]) colored+=`<span style='color:lime'>${full[i]}</span>`; else colored+=`<span style='color:red'>${full[i]}</span>`; } else colored+=`<span style='color:#ccc'>${full[i]}</span>`;} return colored;}
+function updateColoredText(){ targetText.innerHTML=colorizeText(text,inputArea.value); }
+
+function finishTest(){
+  if(finished) return;
+  finished=true;
+  clearInterval(timer);
+  const elapsed=(Date.now()-startTime)/1000;
+  updateStats(elapsed);
+  inputArea.disabled=true;
+  document.getElementById("saveScore").style.display="inline-block";
+}
+
+document.getElementById("resetTest").onclick=resetTest;
+function resetTest(){
+  clearInterval(timer);
+  finished=false; started=false;
+  inputArea.disabled=false;
+  text=buildText();
+  targetText.innerHTML=colorizeText(text,"");
+  inputArea.value="";
+  stats.textContent="WPM: 0 | Accuracy: 0% | Time: 00:00";
+  document.getElementById("saveScore").style.display="none";
+}
+
+document.getElementById("saveScore").onclick=()=>{
+  const name=prompt("Enter your name:"); if(!name) return;
+  const data=JSON.parse(localStorage.getItem("ft_leaderboard")||"[]");
+  const textStat=stats.textContent;
+  data.push({name,textStat});
+  localStorage.setItem("ft_leaderboard",JSON.stringify(data));
+  alert("Score saved!");
+  document.getElementById("saveScore").style.display="none";
+}
+
+document.getElementById("viewLeaderboard").onclick=showLeaderboard;
+document.getElementById("backToTest").onclick=()=>{
+  leaderboard.style.display="none";
+  typingBox.style.display="block";
+  resetTest();
+}
+
+function showLeaderboard(){
+  typingBox.style.display="none";
+  leaderboard.style.display="flex";
+  scoresDiv.innerHTML="";
+  const data=JSON.parse(localStorage.getItem("ft_leaderboard")||"[]");
+  if(data.length===0) scoresDiv.textContent="No scores yet!";
+  data.forEach(e=>{
+    const d=document.createElement("div");
+    d.className="score";
+    d.innerHTML=`<span>${e.name}</span><span>${e.textStat}</span>`;
+    scoresDiv.appendChild(d);
+  });
+}
+</script>
+
+</body>
+</html>
